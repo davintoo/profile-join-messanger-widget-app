@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Join App</title>
+    <meta name="author" content="LMS Collaborator">
+     <style type="text/css">
+      /* 1. Use a more-intuitive box-sizing model */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      /* 2. Remove default margin */
+      * {
+        margin: 0;
+      }
+
+      body {
+        /* 3. Add accessible line-height */
+        line-height: 1.5;
+        /* 4. Improve text rendering */
+        -webkit-font-smoothing: antialiased;
+        padding: 10px 20px;
+
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, Liberation Sans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", Segoe UI Symbol, "Noto Color Emoji";
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 110px;
+      }
+
+      /* 5. Improve media defaults */
+      img, picture, video, canvas, svg {
+        display: block;
+        max-width: 100%;
+      }
+
+      /* 6. Inherit fonts for form controls */
+      input, button, textarea, select {
+        font: inherit;
+      }
+
+      /* 7. Avoid text overflows */
+      p, h1, h2, h3, h4, h5, h6 {
+        overflow-wrap: break-word;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        text-align: center
+      }
+
+
+      /* 8. Improve line wrapping */
+      p {
+        text-wrap: pretty;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        text-wrap: balance;
+      }
+
+      :root {
+          --content-bg-color: #f5f6fa;
+          --text-primary-color: #3c3d3e;
+          --active-primary-color: #1c325f;
+          --active-primary-color-darked: #774894;
+          --user-menu-item-hover-bg-color: #edf2f4;
+          --primary-reverse-color: #ffffff;
+          --button-primary-disabled-color: #edf2f4;
+          --text-secondary-color: #000000;
+          --text-secondary-light-color: #3c3d3e;
+          --error-color: #ff7b72;
+      }
+
+      #join {
+          border: 1px solid var(--active-primary-color);
+          background-color: var(--active-primary-color);
+          color: var(--primary-reverse-color) !important;
+          width: 160px;
+          cursor: pointer;
+          text-decoration: none;
+          border-radius: 3px;
+          vertical-align: middle;
+          display: inline-block;
+          font-size: 14px;
+          font-weight: 700;
+          text-align: center;
+          padding: 8px;
+          outline: none;
+      }
+
+    </style>
+</head>
+<body>      
+  <a target="_blank" id="join">Join Telegram Bot</div>
+</body>
+
+<script src="/node_modules/@cbr/pym/src/index.js"></script>
+<script>
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
+const _generateUuid = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+let appId = 0;
+let instanceId = _generateUuid();
+if (location.pathname.indexOf('/uploads/applications/')) {
+  const winUrl = new URL(window.location.href);
+  appId = winUrl.searchParams.get('app_id');
+  instanceId = `embed-app-${appId}`;
+}
+
+
+const pymChild = new pym.Child({
+  id: instanceId
+});
+const sendHeight = debounce(() => {
+    pymChild.sendMessage('height', '110');
+    console.log('sendHeight', Math.round(window.document.body.offsetHeight) + '');
+}, 250);
+
+document.addEventListener('DOMContentLoaded', () => {
+  sendHeight();
+  const btn = document.getElementById('join');
+  if(localStorage.getItem('id_token')) {
+    fetch('/api/v2/profile/email-settings', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('id_token')
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      if(data.data.telegramJoinUrl) {
+        btn.setAttribute('href', data.data.telegramJoinUrl);
+      }
+    })
+    .catch(error => {
+      console.error('Fetch problem:', error);
+    });
+  }
+});
+</script>
+</html>
